@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastering Listening Skills</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4;
+            background-image: radial-gradient(#dcfce7 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow-x: hidden;
+        }
+
+        /* Custom Animations */
+        .fade-in { animation: fadeIn 0.5s ease-in-out forwards; }
+        .slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Flip Card CSS */
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            height: 200px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .flip-card-front { background-color: white; border: 2px solid #e2e8f0; }
+        .flip-card-back { background-color: #3b82f6; color: white; transform: rotateY(180deg); }
+
+        .hide { display: none !important; }
+        
+        /* Game Item Styles */
+        .draggable { cursor: grab; }
+        .draggable:active { cursor: grabbing; }
+        .drop-zone { border: 2px dashed #94a3b8; transition: all 0.3s; }
+        .drop-zone.dragover { background-color: #e2e8f0; border-color: #3b82f6; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2 text-blue-600 font-bold text-xl">
+                <i class="fas fa-headphones-alt text-2xl"></i>
+                <span>ListenPro</span>
+            </div>
+            <div id="progress-indicator" class="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full hide">
+                Step <span id="current-step">1</span> of 5
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+
+        <section id="sec-login" class="w-full max-w-md mx-auto fade-in">
+            <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 slide-up">
+                <div class="text-center mb-8">
+                    <div class="inline-block p-4 rounded-full bg-blue-100 text-blue-600 mb-4">
+                        <i class="fas fa-user-graduate text-4xl"></i>
+                    </div>
+                    <h1 class="text-3xl font-extrabold text-gray-900">Selamat Datang!</h1>
+                    <p class="text-gray-600 mt-2">Silakan masukkan data diri Anda untuk memulai pembelajaran.</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-left text-sm font-semibold text-gray-700 mb-1">Nama Lengkap</label>
+                        <input type="text" id="input-name" placeholder="Masukkan nama lengkap Anda" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-left text-sm font-semibold text-gray-700 mb-1">Kelas</label>
+                        <input type="text" id="input-class" placeholder="Contoh: XII IPA 1" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                    <button onclick="processLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition mt-4">
+                        Mulai Belajar <i class="fas fa-sign-in-alt ml-2"></i>
+                    </button>
+                    <p id="login-error" class="text-red-500 text-sm mt-2 hidden">Mohon isi semua data dengan benar.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-welcome" class="w-full max-w-3xl text-center fade-in hide">
+            <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 slide-up">
+                <div class="inline-block p-4 rounded-full bg-blue-100 text-blue-600 mb-6">
+                    <i class="fas fa-microphone-alt text-5xl"></i>
+                </div>
+                <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Mastering Active Listening</h1>
+                <p class="text-lg text-gray-600 mb-8">Listening is more than just hearing words. It's an active process of receiving, constructing meaning, and responding.</p>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 mb-8 text-left">
+                    <h3 class="font-bold text-yellow-800 text-xl mb-2"><i class="fas fa-snowflake mr-2"></i> Ice Breaker: Myth or Fact?</h3>
+                    <p class="mb-4 text-gray-700">"Hearing and listening are exactly the same thing."</p>
+                    <div class="flex gap-4">
+                        <button onclick="checkIceBreaker(false)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 px-4 rounded-xl transition">Myth</button>
+                        <button onclick="checkIceBreaker(true)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-700 font-bold py-3 px-4 rounded-xl transition">Fact</button>
+                    </div>
+                    <p id="icebreaker-feedback" class="mt-4 font-semibold text-center hidden"></p>
+                </div>
+
+                <button id="btn-start" onclick="nextSection('sec-learn-1')" class="hidden w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full shadow-lg transform transition hover:-translate-y-1 text-lg">
+                    Start Learning Journey <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="sec-learn-1" class="w-full hide fade-in">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-900">What is Listening to Speech?</h2>
+                <p class="text-gray-600 mt-2">The active process involves 4 key steps.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+                <div class="bg-white p-6 rounded-2xl shadow-md text-center border-t-4 border-blue-400 slide-up" style="animation-delay: 0.1s">
+                    <i class="fas fa-ear-listen text-4xl text-blue-500 mb-3"></i>
+                    <h3 class="font-bold">Hear</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-md text-center border-t-4 border-purple-400 slide-up" style="animation-delay: 0.2s">
+                    <i class="fas fa-brain text-4xl text-purple-500 mb-3"></i>
+                    <h3 class="font-bold">Understand</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-md text-center border-t-4 border-yellow-400 slide-up" style="animation-delay: 0.3s">
+                    <i class="fas fa-clipboard-list text-4xl text-yellow-500 mb-3"></i>
+                    <h3 class="font-bold">Evaluate</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-md text-center border-t-4 border-green-400 slide-up" style="animation-delay: 0.4s">
+                    <i class="fas fa-comment-dots text-4xl text-green-500 mb-3"></i>
+                    <h3 class="font-bold">Respond</h3>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-center mb-6">4 Types of Listening</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Flip Cards for Types -->
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front border-t-4 border-blue-500">
+                            <i class="fas fa-search text-3xl text-blue-500 mb-2"></i>
+                            <h3 class="font-bold text-xl">Intensive Listening</h3>
+                            <p class="text-sm text-gray-500 mt-2">Hover to flip</p>
+                        </div>
+                        <div class="flip-card-back bg-blue-600">
+                            <h3 class="font-bold text-lg mb-2">Focus on specifics</h3>
+                            <p class="text-sm text-blue-100">Listening for names, numbers, facts, keywords. Example: Instructions, addresses.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front border-t-4 border-green-500">
+                            <i class="fas fa-film text-3xl text-green-500 mb-2"></i>
+                            <h3 class="font-bold text-xl">Extensive Listening</h3>
+                            <p class="text-sm text-gray-500 mt-2">Hover to flip</p>
+                        </div>
+                        <div class="flip-card-back bg-green-600">
+                            <h3 class="font-bold text-lg mb-2">General understanding</h3>
+                            <p class="text-sm text-green-100">Focus on overall meaning. Example: Speeches, movies, podcasts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front border-t-4 border-purple-500">
+                            <i class="fas fa-comments text-3xl text-purple-500 mb-2"></i>
+                            <h3 class="font-bold text-xl">Interactive Listening</h3>
+                            <p class="text-sm text-gray-500 mt-2">Hover to flip</p>
+                        </div>
+                        <div class="flip-card-back bg-purple-600">
+                            <h3 class="font-bold text-lg mb-2">Real-time response</h3>
+                            <p class="text-sm text-purple-100">Listening and responding in conversations. Example: Debates, interviews.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front border-t-4 border-orange-500">
+                            <i class="fas fa-clipboard-check text-3xl text-orange-500 mb-2"></i>
+                            <h3 class="font-bold text-xl">Transactional Listening</h3>
+                            <p class="text-sm text-gray-500 mt-2">Hover to flip</p>
+                        </div>
+                        <div class="flip-card-back bg-orange-600">
+                            <h3 class="font-bold text-lg mb-2">Getting things done</h3>
+                            <p class="text-sm text-orange-100">Listening to follow instructions. Example: Recipes, assembly instructions.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-8">
+                <button onclick="nextSection('sec-learn-2')" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-full shadow-lg transition">
+                    Continue to Strategies <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="sec-learn-2" class="w-full hide fade-in">
+             <div class="bg-white rounded-3xl shadow-xl p-8 slide-up">
+                <h2 class="text-3xl font-bold text-center mb-8">Smart Listening Strategies</h2>
+                
+                <div class="flex flex-wrap justify-center gap-4 mb-10">
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold"><i class="fas fa-lightbulb mr-2"></i>1. Predict Topic</span>
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold"><i class="fas fa-key mr-2"></i>2. Catch Keywords</span>
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold"><i class="fas fa-pen mr-2"></i>3. Take Notes</span>
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold"><i class="fas fa-project-diagram mr-2"></i>4. Infer Meaning</span>
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold"><i class="fas fa-check-circle mr-2"></i>5. Check Understanding</span>
+                </div>
+
+                <div class="bg-gray-50 p-6 rounded-2xl border border-gray-200">
+                    <h3 class="text-xl font-bold mb-4 text-center">How to Analyze the Message</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-xl shadow-sm flex items-start gap-4">
+                            <div class="bg-indigo-100 p-3 rounded-lg text-indigo-600"><i class="fas fa-bullseye text-xl"></i></div>
+                            <div>
+                                <h4 class="font-bold">Main Idea</h4>
+                                <p class="text-sm text-gray-600">What is the overall message?</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm flex items-start gap-4">
+                            <div class="bg-teal-100 p-3 rounded-lg text-teal-600"><i class="fas fa-list-ul text-xl"></i></div>
+                            <div>
+                                <h4 class="font-bold">Supporting Details</h4>
+                                <p class="text-sm text-gray-600">Examples and reasons provided.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm flex items-start gap-4">
+                            <div class="bg-rose-100 p-3 rounded-lg text-rose-600"><i class="fas fa-balance-scale text-xl"></i></div>
+                            <div>
+                                <h4 class="font-bold">Fact vs Opinion</h4>
+                                <p class="text-sm text-gray-600">What is true vs What is a personal belief?</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm flex items-start gap-4">
+                            <div class="bg-amber-100 p-3 rounded-lg text-amber-600"><i class="fas fa-bullhorn text-xl"></i></div>
+                            <div>
+                                <h4 class="font-bold">Purpose & Intention</h4>
+                                <p class="text-sm text-gray-600">Why does the speaker speak?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <button onclick="nextSection('sec-simulation')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition">
+                        Play Simulation Game <i class="fas fa-gamepad ml-2"></i>
+                    </button>
+                </div>
+             </div>
+        </section>
+
+        <section id="sec-simulation" class="w-full hide fade-in">
+            <div class="bg-white rounded-3xl shadow-xl p-8 slide-up">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Simulasi Analisis Pesan</h2>
+                    <p class="text-gray-600">Dengarkan kutipan pidato di bawah ini, lalu klik untuk mengkategorikan apakah kalimat tersebut Fakta atau Opini.</p>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 p-6 rounded-2xl mb-8 text-center shadow-sm">
+                    <button onclick="playAudioExample()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full shadow-md transition transform hover:scale-105 flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-volume-up text-2xl mr-3"></i> Putar Audio Listening
+                    </button>
+                    <p class="italic text-gray-500 text-sm mb-4">(Pastikan volume perangkat Anda menyala untuk mendengarkan audio)</p>
+                    <div id="audio-transcript" class="p-4 bg-white rounded-xl text-left italic text-gray-700 hidden border-l-4 border-blue-500">
+                        "Pemanasan global telah meningkatkan suhu bumi sebesar 1.1 derajat Celcius sejak akhir abad ke-19. Menurut saya, ini adalah ancaman terbesar bagi umat manusia, dan kita harus beralih ke energi terbarukan karena itu satu-satunya cara terbaik."
+                    </div>
+                </div>
+
+                <div id="sim-container" class="space-y-4 mb-8">
+                    <!-- Game items generated by JS -->
+                </div>
+
+                <div id="sim-feedback" class="text-center font-bold text-xl h-8 mb-4"></div>
+
+                <div class="text-center mt-8">
+                    <button id="btn-next-quiz" onclick="nextSection('sec-quiz')" class="hidden bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-full shadow-lg transition">
+                        Final Challenge <i class="fas fa-trophy ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-quiz" class="w-full max-w-2xl hide fade-in">
+            <div class="bg-white rounded-3xl shadow-xl p-8 slide-up">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h2 class="text-2xl font-bold"><i class="fas fa-tasks text-blue-600 mr-2"></i> Listening Challenge</h2>
+                    <div class="text-blue-600 font-bold bg-blue-50 px-4 py-2 rounded-lg">
+                        Question <span id="q-current">1</span>/5
+                    </div>
+                </div>
+
+                <div id="quiz-content">
+                    <h3 id="question-text" class="text-xl font-semibold mb-6 text-gray-800">Question text goes here?</h3>
+                    <div id="options-container" class="space-y-3">
+                        <!-- Options injected by JS -->
+                    </div>
+                </div>
+
+                <div id="quiz-result" class="hidden text-center py-8">
+                    <i class="fas fa-graduation-cap text-6xl text-green-500 mb-4"></i>
+                    <h2 class="text-3xl font-bold mb-2">Challenge Completed!</h2>
+                    <p class="text-lg text-gray-600 mb-6">Your Score: <span id="score-display" class="font-bold text-blue-600 text-2xl">0</span>%</p>
+                    
+                    <div id="pass-content" class="hidden">
+                        <p class="text-green-600 font-semibold mb-6">Congratulations! You have mastered the listening concepts.</p>
+                        <div class="max-w-xs mx-auto">
+                            <button onclick="generateCertificate()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition">
+                                Claim Certificate <i class="fas fa-award ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="fail-content" class="hidden">
+                        <p class="text-red-500 font-semibold mb-6">You need at least 80% to pass. Review the material and try again.</p>
+                        <button onclick="resetQuiz()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-xl transition">
+                            <i class="fas fa-redo mr-2"></i> Retry Challenge
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-certificate" class="w-full hide fade-in">
+            <div class="bg-white rounded-3xl shadow-xl p-8 text-center slide-up">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Your Certificate of Achievement</h2>
+                
+                <div class="relative w-full max-w-3xl mx-auto mb-8 border-8 border-double border-gray-200 p-2 bg-gray-50 rounded-lg overflow-hidden">
+                    <!-- Canvas for drawing the certificate -->
+                    <canvas id="cert-canvas" width="800" height="600" class="w-full h-auto rounded shadow-inner bg-white"></canvas>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button onclick="downloadCertificate()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition flex items-center">
+                        <i class="fas fa-download mr-2"></i> Download Image
+                    </button>
+                    <button onclick="location.reload()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-full transition">
+                        Start Over
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- State Management ---
+        const sections = ['sec-login', 'sec-welcome', 'sec-learn-1', 'sec-learn-2', 'sec-simulation', 'sec-quiz', 'sec-certificate'];
+        let currentStepIndex = 0;
+        let studentData = { name: '', class: '' };
+
+        function processLogin() {
+            const nameInput = document.getElementById('input-name').value.trim();
+            const classInput = document.getElementById('input-class').value.trim();
+            const errorMsg = document.getElementById('login-error');
+
+            if (!nameInput || !classInput) {
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            errorMsg.classList.add('hidden');
+            studentData.name = nameInput;
+            studentData.class = classInput;
+            
+            // Lanjut ke section selamat datang
+            nextSection('sec-welcome');
+        }
+
+        function playAudioExample() {
+            // Mengecek apakah Text-to-Speech didukung
+            if ('speechSynthesis' in window) {
+                const text = "Pemanasan global telah meningkatkan suhu bumi sebesar 1 koma 1 derajat Celcius sejak akhir abad ke-19. Menurut saya, ini adalah ancaman terbesar bagi umat manusia, dan kita harus beralih ke energi terbarukan karena itu satu-satunya cara terbaik.";
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID';
+                utterance.rate = 0.9; // Diperlambat sedikit agar listening lebih jelas
+                
+                // Menampilkan transkrip teks setelah 2 detik
+                setTimeout(() => {
+                    document.getElementById('audio-transcript').classList.remove('hidden');
+                }, 2000);
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Maaf, browser Anda tidak mendukung fitur pemutaran suara.");
+                document.getElementById('audio-transcript').classList.remove('hidden');
+            }
+        }
+
+        function nextSection(targetId) {
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hide');
+            });
+            const targetEl = document.getElementById(targetId);
+            if(targetEl) targetEl.classList.remove('hide');
+            
+            // Update progress
+            const progress = document.getElementById('progress-indicator');
+            if (targetId !== 'sec-login' && targetId !== 'sec-welcome' && targetId !== 'sec-certificate') {
+                progress.classList.remove('hide');
+                currentStepIndex++;
+                document.getElementById('current-step').innerText = currentStepIndex;
+            } else {
+                progress.classList.add('hide');
+            }
+
+            if(targetId === 'sec-simulation') initSimulation();
+            if(targetId === 'sec-quiz') loadQuestion();
+        }
+
+        // --- Ice Breaker Logic ---
+        function checkIceBreaker(answer) {
+            const feedback = document.getElementById('icebreaker-feedback');
+            const btnStart = document.getElementById('btn-start');
+            feedback.classList.remove('hidden');
+            
+            if (answer === false) { // Myth is correct
+                feedback.innerHTML = '<i class="fas fa-check-circle text-green-500 mr-1"></i> Correct! Hearing is physical, Listening is an active mental process.';
+                feedback.className = "mt-4 font-semibold text-center text-green-700";
+                btnStart.classList.remove('hidden');
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle text-red-500 mr-1"></i> Not quite. Hearing is just physical sound reception. Listening requires active understanding.';
+                feedback.className = "mt-4 font-semibold text-center text-red-600";
+                btnStart.classList.remove('hidden'); // Allow them to proceed anyway
+            }
+        }
+
+        // --- Simulation Game Logic ---
+        const simData = [
+            { text: "Suhu bumi meningkat 1.1 derajat Celcius.", type: "fact" },
+            { text: "Ini adalah ancaman terbesar bagi umat manusia.", type: "opinion" },
+            { text: "Kita harus beralih ke energi terbarukan.", type: "opinion" }
+        ];
+        let simCompleted = 0;
+
+        function initSimulation() {
+            const container = document.getElementById('sim-container');
+            container.innerHTML = '';
+            simCompleted = 0;
+            document.getElementById('sim-feedback').innerText = '';
+            document.getElementById('btn-next-quiz').classList.add('hidden');
+
+            simData.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'bg-white border-2 border-gray-200 p-4 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 transition-all duration-300';
+                el.innerHTML = `
+                    <p class="font-medium flex-1 text-gray-800">"${item.text}"</p>
+                    <div class="flex gap-2 w-full sm:w-auto" id="btns-${index}">
+                        <button onclick="checkSim(${index}, 'fact', this)" class="flex-1 sm:flex-none border border-blue-500 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold transition">Fakta</button>
+                        <button onclick="checkSim(${index}, 'opinion', this)" class="flex-1 sm:flex-none border border-purple-500 text-purple-600 hover:bg-purple-50 px-4 py-2 rounded-lg font-semibold transition">Opini</button>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function checkSim(index, selectedType, btnElement) {
+            const item = simData[index];
+            const feedback = document.getElementById('sim-feedback');
+            const btnContainer = document.getElementById(`btns-${index}`);
+
+            if (item.type === selectedType) {
+                // Correct
+                btnContainer.innerHTML = `<span class="text-green-600 font-bold bg-green-100 px-4 py-2 rounded-lg"><i class="fas fa-check"></i> Benar (${selectedType.toUpperCase()})</span>`;
+                feedback.innerHTML = `<span class="text-green-500"><i class="fas fa-star"></i> Tepat sekali!</span>`;
+                simCompleted++;
+                
+                if(simCompleted === simData.length) {
+                    feedback.innerHTML = `<span class="text-blue-600 font-bold">Luar biasa! Anda bisa membedakan Fakta dan Opini.</span>`;
+                    document.getElementById('btn-next-quiz').classList.remove('hidden');
+                }
+            } else {
+                // Incorrect
+                feedback.innerHTML = `<span class="text-red-500"><i class="fas fa-exclamation-circle"></i> Kurang tepat, coba lagi. (Fakta dapat dibuktikan, Opini adalah pandangan)</span>`;
+                // Shake effect
+                btnElement.parentElement.parentElement.classList.add('animate-pulse');
+                setTimeout(() => btnElement.parentElement.parentElement.classList.remove('animate-pulse'), 500);
+            }
+        }
+
+        // --- Quiz Logic ---
+        const quizData = [
+            {
+                q: "What is the correct order of the active listening process?",
+                options: ["Understand, Hear, Respond, Evaluate", "Hear, Evaluate, Understand, Respond", "Hear, Understand, Evaluate, Respond", "Evaluate, Respond, Hear, Understand"],
+                answer: 2
+            },
+            {
+                q: "Listening to a podcast to grasp the overall meaning is an example of:",
+                options: ["Intensive Listening", "Extensive Listening", "Interactive Listening", "Transactional Listening"],
+                answer: 1
+            },
+            {
+                q: "If you are listening to instructions on how to assemble a desk, you are doing:",
+                options: ["Extensive Listening", "Transactional Listening", "Interactive Listening", "Passive Listening"],
+                answer: 1
+            },
+            {
+                q: "Which strategy helps you guess what the speaker will talk about before they start?",
+                options: ["Taking notes", "Inferring meaning", "Predicting the topic", "Catching keywords"],
+                answer: 2
+            },
+            {
+                q: "When analyzing a message, what differentiates a 'Fact' from an 'Opinion'?",
+                options: ["Facts are true, opinions are personal beliefs", "Opinions are always true", "Facts are feelings, opinions are numbers", "There is no difference"],
+                answer: 0
+            }
+        ];
+
+        let currentQ = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            const qObj = quizData[currentQ];
+            document.getElementById('q-current').innerText = currentQ + 1;
+            document.getElementById('question-text').innerText = qObj.q;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            qObj.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-300 transition-colors duration-200 font-medium text-gray-700";
+                btn.innerText = opt;
+                btn.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (selectedIndex === quizData[currentQ].answer) {
+                score++;
+            }
+            
+            currentQ++;
+            if (currentQ < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-content').classList.add('hidden');
+            const resultDiv = document.getElementById('quiz-result');
+            resultDiv.classList.remove('hidden');
+            
+            const percentage = (score / quizData.length) * 100;
+            document.getElementById('score-display').innerText = percentage;
+            
+            if (percentage >= 80) {
+                document.getElementById('pass-content').classList.remove('hidden');
+                document.getElementById('fail-content').classList.add('hidden');
+            } else {
+                document.getElementById('pass-content').classList.add('hidden');
+                document.getElementById('fail-content').classList.remove('hidden');
+            }
+        }
+
+        function resetQuiz() {
+            currentQ = 0;
+            score = 0;
+            document.getElementById('quiz-content').classList.remove('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+            loadQuestion();
+        }
+
+        // --- Certificate Generation (Canvas) ---
+        function generateCertificate() {
+            if(!studentData.name || !studentData.class) {
+                alert("Data siswa tidak lengkap. Silakan muat ulang halaman dan login kembali.");
+                return;
+            }
+
+            nextSection('sec-certificate');
+            drawCertificate(studentData.name, studentData.class);
+        }
+
+        function drawCertificate(name, studentClass) {
+            const canvas = document.getElementById('cert-canvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, w, h);
+
+            // Background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
+
+            // Outer Border
+            ctx.strokeStyle = '#1e3a8a'; // Blue-900
+            ctx.lineWidth = 15;
+            ctx.strokeRect(20, 20, w - 40, h - 40);
+
+            // Inner Border
+            ctx.strokeStyle = '#fbbf24'; // Yellow-400
+            ctx.lineWidth = 4;
+            ctx.strokeRect(30, 30, w - 60, h - 60);
+
+            // Background Pattern/Gradient
+            const gradient = ctx.createLinearGradient(0, 0, w, h);
+            gradient.addColorStop(0, "rgba(239, 246, 255, 0.5)"); // blue-50
+            gradient.addColorStop(1, "rgba(255, 255, 255, 1)");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(32, 32, w - 64, h - 64);
+
+            // Header Text
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#1e3a8a';
+            ctx.font = 'bold 40px "Inter", sans-serif';
+            ctx.fillText('CERTIFICATE OF COMPLETION', w / 2, 120);
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '20px "Inter", sans-serif';
+            ctx.fillText('This is proudly presented to', w / 2, 180);
+
+            // Name
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold italic 48px "Times New Roman", serif';
+            ctx.fillText(name, w / 2, 260);
+
+            // Class
+            ctx.fillStyle = '#334155';
+            ctx.font = 'bold 24px "Inter", sans-serif';
+            ctx.fillText('Kelas: ' + studentClass, w / 2, 305);
+
+            // Line under name & class
+            ctx.beginPath();
+            ctx.moveTo(w / 2 - 200, 320);
+            ctx.lineTo(w / 2 + 200, 320);
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Description
+            ctx.fillStyle = '#475569';
+            ctx.font = '18px "Inter", sans-serif';
+            ctx.fillText('For successfully completing the interactive module on', w / 2, 360);
+            
+            ctx.fillStyle = '#2563eb';
+            ctx.font = 'bold 24px "Inter", sans-serif';
+            ctx.fillText('Mastering Listening to Speech', w / 2, 400);
+
+            // Footer / Date
+            const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '16px "Inter", sans-serif';
+            
+            // Left signature area
+            ctx.fillText('Date Completed', 200, 480);
+            ctx.font = 'bold 16px "Inter", sans-serif';
+            ctx.fillText(date, 200, 510);
+            
+            ctx.beginPath();
+            ctx.moveTo(120, 495);
+            ctx.lineTo(280, 495);
+            ctx.stroke();
+
+            // Right signature area
+            ctx.font = '16px "Inter", sans-serif';
+            ctx.fillText('Instructor / System', w - 200, 480);
+            ctx.font = 'italic bold 20px "Inter", sans-serif';
+            ctx.fillText('ListenPro App', w - 200, 510);
+            
+            ctx.beginPath();
+            ctx.moveTo(w - 280, 495);
+            ctx.lineTo(w - 120, 495);
+            ctx.stroke();
+
+            // Add a badge/seal
+            ctx.beginPath();
+            ctx.arc(w / 2, 480, 40, 0, 2 * Math.PI);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#b45309';
+            ctx.stroke();
+            
+            ctx.fillStyle = '#b45309';
+            ctx.font = 'bold 12px "Inter", sans-serif';
+            ctx.fillText('VERIFIED', w / 2, 475);
+            ctx.fillText('SKILL', w / 2, 490);
+        }
+
+        function downloadCertificate() {
+            const canvas = document.getElementById('cert-canvas');
+            const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+            const link = document.createElement('a');
+            link.download = 'Listening_Certificate.png';
+            link.href = image;
+            link.click();
+        }
+    </script>
+</body>
+</html>
